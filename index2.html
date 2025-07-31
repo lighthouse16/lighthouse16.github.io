@@ -625,7 +625,7 @@
     }
 
     .status-high {
-      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      background: linear-gradient(135deg, #48dbfb, #0abde3);
       color: white;
       box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
     }
@@ -955,7 +955,7 @@
         </div>
         <div class="weather-item">
           <strong><i class="fas fa-exclamation-triangle"></i> Nguy cơ lũ lụt:</strong>
-          <span class="status-indicator status-high">Cao ⚠️</span>
+          <span class="status-indicator status-high">Thấp</span>
         </div>
       </div>
     </div>
@@ -974,42 +974,42 @@
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-rain"></i> Chủ Nhật</span>
-               <span class="weather-desc">Mưa Nhẹ (15mm)</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
              <span class="risk-indicator risk-low">Thấp</span>
            </li>
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Hai</span>
-               <span class="weather-desc">Mưa Nhẹ (15mm)</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
              <span class="risk-indicator risk-low">Thấp</span>
            </li>
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Ba</span>
-               <span class="weather-desc">Mưa Nhẹ (15mm)</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
-             <span class="risk-indicator risk-medium">Trung Bình</span>
+             <span class="risk-indicator risk-low">Thấp</span>
            </li>
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-showers-heavy"></i> Thứ Tư</span>
-               <span class="weather-desc">Mưa Lớn (110mm) 🌧️</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
-             <span class="risk-indicator risk-high">Cao ⚠️</span>
+             <span class="risk-indicator risk-low">Thấp</span>
            </li>
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Năm</span>
-               <span class="weather-desc">Mưa Vừa (70mm)</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
-             <span class="risk-indicator risk-medium">Trung Bình</span>
+             <span class="risk-indicator risk-low">Thấp</span>
            </li>
            <li>
              <div class="day-info">
                <span class="day-name"><i class="fas fa-cloud-rain"></i> Thứ Sáu</span>
-               <span class="weather-desc">Mưa Rào (30mm)</span>
+               <span class="weather-desc">Trời Quang ☀️</span>
              </div>
              <span class="risk-indicator risk-low">Thấp</span>
            </li>
@@ -1019,6 +1019,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Biểu đồ dòng chảy dự đoán -->
+    <div class="forecast">
+      <h2><i class="fas fa-water"></i> Biểu đồ dòng chảy dự đoán</h2>
+      <div class="chart-container">
+        <canvas id="streamflowChart"></canvas>
+      </div>
+    </div>
+    
   </div>
 
   <!-- Team Section -->
@@ -1167,7 +1176,7 @@
         <div style="text-align: center; padding: 10px;">
           <h3 style="color: #1e3c72; margin: 0 0 10px 0;">🌊 Sông Long Đại</h3>
           <p style="margin: 5px 0;"><strong>Mực Nước Hiện Tại:</strong> 3.2 m</p>
-          <p style="margin: 5px 0;"><strong>Nguy Cơ:</strong> <span style="color: #e74c3c; font-weight: bold;">Cao</span></p>
+          <p style="margin: 5px 0;"><strong>Nguy Cơ:</strong> <span style="color: #48dbfb; font-weight: bold;">Thấp</span></p>
           <div style="background: linear-gradient(135deg, #667eea, #764ba2); height: 4px; border-radius: 2px; margin-top: 10px;"></div>
         </div>
       `)
@@ -1283,6 +1292,85 @@
             this.style.background = '';
           }, 300);
         });
+      });
+    });
+  </script>
+  <script>
+  // Biểu đồ dòng chảy dự đoán từ predicted_streamflow_long_dai.csv
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+    const data = lines.slice(1).map(line => {
+      const values = line.split(',');
+      return {
+        date: values[0],
+        predicted_streamflow_cms: parseFloat(values[1])
+      };
+    });
+    return data;
+  }
+
+  fetch('predicted_streamflow_long_dai.csv')
+    .then(response => response.text())
+    .then(csvText => {
+      const data = parseCSV(csvText);
+      const labels = data.map(row => row.date);
+      const values = data.map(row => row.predicted_streamflow_cms);
+
+      const ctx = document.getElementById('streamflowChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Dòng chảy dự đoán (m³/s)',
+            data: values,
+            borderColor: 'rgba(102, 126, 234, 1)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            pointRadius: 0,
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#1e3c72',
+                font: { size: 14, weight: 'bold' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Ngày',
+                color: '#1e3c72',
+                font: { size: 14, weight: 'bold' }
+              },
+              ticks: {
+                color: '#1e3c72',
+                maxTicksLimit: 12,
+                autoSkip: true
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Dòng chảy (m³/s)',
+                color: '#1e3c72',
+                font: { size: 14, weight: 'bold' }
+              },
+              ticks: {
+                color: '#1e3c72'
+              }
+            }
+          }
+        }
       });
     });
   </script>
